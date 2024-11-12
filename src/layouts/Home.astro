@@ -1,0 +1,156 @@
+---
+import Sidebar from "../components/Sidebar.astro";
+import { SITE_TITLE ,SITE_DESCRIPTION, SITE_MENU, SITE_CREDIT , TRACKING_ID, BASE_URL } from "../consts";
+
+interface Props{
+  og_site_name?:string;
+  og_title?:string;
+  og_description?:string;
+  og_url?:string;
+  og_image?:string;
+  og_type?:string;
+  og_locale?:string;
+}
+
+const { og_site_name,og_title,og_description,og_url,og_image,og_type,og_locale }=Astro.props;
+const has_ogp:boolean=og_site_name||og_title||og_description||og_url||og_image||og_type||og_locale?true:false;
+---
+
+<head prefix={has_ogp?"og: https://ogp.me/ns#":""} data-TrackingID={TRACKING_ID}>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <meta lang="ja">
+  <meta name="google-site-verification" content="CT-CN4TbnrtfjHjN6Oe3NKMewseQjDWf3EkBK6O24Ko" />
+  {og_url?<meta property="og:url" content={og_url} />:null}
+  {og_type?<meta property="og:type" content={og_type} />:null}
+  <meta property="og:title" content={og_title||SITE_TITLE} />
+  <meta property="og:image" content={og_image||BASE_URL+"img/RPC.png"} />
+  {og_site_name?<meta property="og:site_name" content={og_site_name} />:null}
+  {og_description?<meta property="og:description" content={og_description} />:null}
+  {og_locale?<meta property="og:locale" content={og_locale} />:null}
+  {has_ogp?<meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content={og_title} /><meta name="twitter:description" content={og_description||SITE_DESCRIPTION} /><meta name="twitter:image" content={og_image||BASE_URL+"img/RPC.png"} /><meta name="twitter:site" content="@RokkoPhysics" />:null}
+  <title>{SITE_TITLE}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="icon" sizes="48x48" href="/favicon.ico">
+  <link rel="icon" href="/favicon.svg" sizes="any" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <script async src={`https://www.googletagmanager.com/gtag/js?id=${TRACKING_ID}`}></script>
+  <script is:inline>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', document.head.dataset.trackingid);
+  </script>
+</head>
+<body>
+  <div id="main-wrapper">
+    <div id="sidebar-wrapper">
+      <Sidebar  title={SITE_TITLE} title_desc={SITE_DESCRIPTION} links={SITE_MENU} credit={SITE_CREDIT} />
+    </div>
+    <div id="content-wrapper">
+      <button id="menu-button" onclick="document.getElementById('sidebar-wrapper').classList.toggle('active');this.classList.toggle('active')">
+        <img src="/img/bars.svg" alt="bar" />
+        Menu
+      </button>
+      <slot/>
+    </div>
+  </div>
+</body>
+
+<style>
+body{
+  margin: 0;
+  background-color: #eee;
+  color: #333;
+  font-family: "Noto Sans JP", system-ui;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  scrollbar-gutter: stable;
+  min-height: 100vh;
+}
+
+#main-wrapper{
+  display: flex;
+  flex-direction: row;
+  justify-content: baseline;
+  align-items: flex-start;
+}
+
+#sidebar-wrapper{
+  z-index: 1;
+  width: 25%;
+  height: 100%;
+  padding-inline: 15px;
+  padding-block-start: 40px;
+  background-color: #eee;
+  position: sticky;
+  top: -40px;
+}
+
+#menu-button{
+  position: fixed;
+  z-index: -1;
+  display: none;
+  left: 20px;
+  top: 20px;
+  width: 5rem;
+  height: 2.5rem;
+  font-size: 1rem;
+  background-color: #eeec;
+  color: #2065a1;
+  border-color: #2065a1;
+  border-style: solid;
+  border-width: 1px;
+  img{
+    position: relative;
+    top: 0.1rem;
+    width: 1rem;
+    height: 1rem;
+    filter: brightness(0) saturate(100%) invert(29%) sepia(83%) saturate(747%) hue-rotate(174deg) brightness(97%) contrast(89%);
+  }
+  &.active{
+    background-color: #2065a1c0;
+    color: #eee;
+    img{
+      filter: brightness(0) saturate(100%) invert(100%) sepia(51%) saturate(301%) hue-rotate(252deg) brightness(114%) contrast(87%);
+    }
+  }
+}
+
+#content-wrapper{
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  width: calc(75% - 2rem);
+  flex-grow: 1;
+}
+
+@media (max-width: 785px) {
+  #sidebar-wrapper{
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: calc(100vw - 30px);
+    height: calc(100vh - 40px);
+    transform: translateX(-100vw);
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    &.active{
+      transform: translateX(0px);
+    }
+  }
+
+  #menu-button{
+    z-index: 2;
+    display: block;
+  }
+
+  #content-wrapper{
+    width: 100%;
+  }
+}
+</style>

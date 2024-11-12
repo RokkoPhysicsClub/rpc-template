@@ -1,0 +1,54 @@
+---
+import Card from "../components/Card.astro";
+import Tag from "../components/Tag.astro";
+import Page from "../layouts/Page.astro";
+import tags from "../scripts/tags.json";
+
+const fm={title:"Tags"}
+//TODO:Add "not found" and "tag select"
+---
+
+<Page frontmatter={fm}>
+  <h2>Tags</h2>
+  <div id="tag-list">
+    {
+      tags.tags.map(t=><Tag text={t.name} onclick={text=>`dispTag("${text}")`}></Tag>)
+    }
+  </div>
+  {
+    tags.tags.map(t=>
+      <div class="card-list" data-tagname={t.name}>
+        <h2>タグ "{t.name}" が付いた記事</h2>
+        {t.articles.map(a=><Card url={a.link} og_title={a.title} og_description={a.description} og_image={a.image}></Card>)}
+      </div>
+    )
+  }
+</Page>
+
+<style>
+.card-list{
+  display: none;
+}
+
+#tag-list{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+</style>
+
+<script is:inline>
+const params=new URL(window.location.href).searchParams;
+const card_list=Array.from(document.getElementsByClassName("card-list"));
+dispTag(params.get('tag'));
+
+function dispTag(tag){
+  card_list.forEach(c=>{
+    if(tag==c.dataset.tagname){
+      c.style.display="block";
+    }else{
+      c.style.display="none";
+    }
+  });
+}
+</script>

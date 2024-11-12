@@ -1,0 +1,21 @@
+{
+  "name": "rpc-2024",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "devh": "astro dev --host",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "": "file:",
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/mdx": "^3.1.9",
+    "astro": "^4.16.10",
+    "astro-relative-links": "^0.4.0",
+    "typescript": "^5.5.4"
+  }
+}

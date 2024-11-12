@@ -1,0 +1,307 @@
+---
+import Tag from "../components/Tag.astro";
+import { BASE_URL, SITE_TITLE } from "../consts";
+import Home from "../layouts/Home.astro";
+
+type heading={ depth: number;slug: string;text: string; };
+type heading_hierarchy={parent:heading,child:heading[]};
+const title=Astro.props.frontmatter.title;
+const author=Astro.props.frontmatter.author;
+//見出し一覧を取得
+const headings=Astro.props.headings;
+//ディレクトリから記事であるか判断
+const is_article=(/\/works\/.+/).test(Astro.url.href);
+
+//見出しの情報を加工する
+const heading_data=()=>{
+  //タイトルをルートとしてParent-Childの関係で木構造を構築
+  const result=[{parent:{depth:1,slug:slugify(title),text:title},child:[]}]as heading_hierarchy[];
+  headings.forEach((h: heading)=>{
+    if(h.depth<3){
+      //大きな見出しは親として登録
+      result.push({parent:h,child:[]});
+    }else{
+      //小さな見出しは子として最後のインデックスの親に追加
+      result[result.length-1].child.push(h);
+    }
+  });
+  return result;
+};
+
+//見出しをSlug化(特殊な文字を含まない形式へ変換)する
+function slugify(str:string) {
+  str = str.replace(/^\s+|\s+$/g, '');
+  str = str.toLowerCase();
+  str = str.replace(/\./g, '')
+           .replace(/\s+/g, '-')
+           .replace(/-+/g, '-');
+  return str;
+}
+
+//タグが定義されていれば取得。無ければ空になる。
+const tags:string[]=Astro.props.frontmatter.tags||[];
+---
+
+<Home og_url={BASE_URL+(is_article?Astro.url.toString().match(/works\/.+/):"")} og_title={title} og_description={Astro.props.frontmatter.description} og_image={Astro.props.frontmatter.image?BASE_URL+Astro.props.frontmatter.image.substring(1):undefined} og_locale={BASE_URL} og_site_name={SITE_TITLE} og_type="website" >
+  <div id="container">
+    {title?<h1 class="title" id={slugify(title)}>{title}</h1>:null}
+    {author?<p class="author">{author}</p>:null}
+    {
+      tags.length>0?
+      <div id="tag-list">
+        {
+          tags.map(t=>{
+            return <Tag text={t} onclick={(text)=>`window.location.assign("../../tags/?tag=${text}")`}></Tag>
+          })
+        }
+      </div>:null
+    }
+    <div id="slot">
+      <slot/>
+    </div>
+  </div>
+  {//記事の場合、右側に見出し一覧を追加
+    is_article?<div id="heading-list">
+      <div id="heading-container">
+        <div class="heading-box">
+          <h2 id="author-box">{author}</h2>
+        </div>
+        <div class="heading-box" id="box-sticky">
+          <ol class="ol-depth-1">
+            {//大きな見出しの情報を処理
+              heading_data().map((h: heading_hierarchy)=>{
+                return <li>
+                  <a href={`#${h.parent.slug}`} id={`anchor-${h.parent.slug}`}>
+                    {h.parent.text}
+                  </a>
+                  {//小さな見出しを子として持つのであれば、処理する
+                    h.child.length>0?<ol class="ol-depth-2">{
+                      h.child.map((h:heading)=>{
+                        return <li>
+                          <a href={`#${h.slug}`} id={`anchor-${h.slug}`}>{h.text}</a>
+                        </li>
+                      })
+                    }</ol>:null
+                  }
+                </li>
+              })
+            }
+          </ol>
+        </div>
+      </div>
+    </div>:null
+  }
+  
+</Home>
+
+<style>
+#container{
+  background-color: #f8f8f8;
+  padding-inline: 1rem;
+  padding-block: 2rem;
+  min-height: calc(100vh - 4rem);
+  width: 65%;
+  @media (max-width:1280px) {
+    width: calc(100% - 2rem);
+  }
+}
+
+#heading-list{
+  flex-grow: 1;
+  margin-top: 2rem;
+  margin-right: 1rem;
+  @media (max-width:1280px) {
+    display: none;
+  }
+}
+
+#heading-container{
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 2rem;
+}
+
+.heading-box{
+  padding: 1rem;
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  height: fit-content;
+}
+
+#box-sticky{
+  position: sticky;
+  top: 2rem;
+}
+
+.author{
+  text-align: right;
+  font-size: 1.3rem;
+}
+
+#author-box{
+  text-align: center;
+  margin-block: 0.5rem;
+  font-weight: 400;
+}
+
+.ol-depth-1{
+  padding-inline-start: 1rem;
+  font-size: 0.9rem;
+  >li{
+    list-style: circle;
+    >a{
+      display: -webkit-box;
+      text-decoration: none;
+      color: #777;
+      margin: 8px 0;
+      &:hover{
+        color: #333;
+      }
+    }
+  }
+}
+
+.ol-depth-2{
+  padding: 0;
+  li{
+    list-style: none;
+    a{
+      display: -webkit-box;
+      text-decoration: none;
+      color: #aaa;
+      margin: 8px 0;
+      &:hover{
+        color: #333;
+      }
+    }
+  }
+}
+
+#tag-list{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-block: 1.5rem;
+}
+</style>
+
+<style is:global>
+h1{
+  font-weight: 400;
+}
+
+#slot{
+  h1,h2{
+    padding-bottom: .3em;
+    border-bottom: 1px solid #ccc;
+  }
+}
+
+thead{
+  background-color: #ccc;
+}
+
+tbody{
+  tr{
+    &:nth-child(2n){
+      background-color: #ccc;
+    }
+    &:nth-child(2n+1){
+      background-color: #e2e2e2;
+    }
+    td{
+      padding-inline: 1rem;
+      padding-block: 0.1rem;
+    }
+  }
+}
+
+img{
+  max-width: 100%;
+  max-height: 50vh;
+}
+
+@font-face {
+  font-family: "MoralerspaceNeon-Regular";
+  src: url("/font/MoralerspaceNeon-Regular.ttf") format("truetype");
+}
+
+code{
+  padding: 0.2rem;
+  background-color: #ddd;
+  border-radius: 5px;
+  line-height: 1.2rem;
+  font-size: 0.9rem;
+  font-family: "MoralerspaceNeon-Regular",consolas;
+}
+
+pre{
+  width: 100%;
+  display: flex;
+  overflow-x: auto;
+  border-radius: 5px;
+  background-color: #112 !important;
+  code{
+    padding: 1.1rem;
+    background-color: #112;
+  }
+}
+
+blockquote{
+  margin-inline: 0;
+  padding-inline: 2rem;
+  border-inline-start: 3px solid #ccc;
+  color: #777;
+}
+</style>
+
+<script>
+//見出し一覧がある要素を取得
+const box=document.getElementById("box-sticky")!;
+//見出し名から見出しの要素を取得
+const anchors=box?Array.from(box.getElementsByTagName("a")):[];
+const headers:{e:HTMLElement,n:string}[]=[];
+anchors.forEach(a=>{
+  headers.push({e:document.getElementById(a.id.substring(7))!,n:a.id.substring(7)});
+});
+const anchor_map=anchors.map(a=>{
+  return {n:a.id.substring(7),e:a};
+});
+
+highlight();
+
+window.addEventListener('scroll',()=>{
+  highlight();
+});
+
+//現在の画面上部の座標から良い感じに見出しをハイライトする
+function highlight(){
+  let p=headers[0];
+  let end=false;
+  const scroll=scrollY+scrollY/(document.body.clientHeight-window.innerHeight)*window.innerHeight;
+  headers.forEach((h,i)=>{
+    if(end)return;
+    if(h.e.offsetTop>scroll){
+      anchor_map.forEach(a=>{
+        if(a.n==p.n){
+          a.e.style.color="#88f";
+        }else{
+          a.e.style.color="";
+        }
+      });
+      end=true;
+    }else if(i==headers.length-1){
+      anchor_map.forEach(a=>{
+        if(a.n==h.n){
+          a.e.style.color="#88f";
+        }else{
+          a.e.style.color="";
+        }
+      });
+    }else{
+      p=h;
+    }
+  })
+}
+</script>

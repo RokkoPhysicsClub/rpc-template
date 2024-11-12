@@ -1,0 +1,180 @@
+---
+import { BASE_URL } from "../consts";
+import Home from "../layouts/Home.astro";
+
+const articles=await Astro.glob("./works/*");
+
+//型定義
+type article_data={link:string,title:string,description:string,image:string}
+type tag_map={name:string,articles:article_data[]};
+const json:Array<tag_map>=[];
+
+//記事からタグ関連の情報を生成
+articles.forEach(a=>{
+  if(!a.frontmatter)return;
+  if(!a.frontmatter.tags)return;
+  (a.frontmatter.tags as string[]).forEach(t=>{
+    let exist=false;
+    json.forEach(j=>{
+      if(j.name==t){
+        j.articles.push(getArticleData(a));
+        exist=true;
+      }
+    });
+    if(!exist){
+      json.push({name:t,articles:[getArticleData(a)]});
+    }
+  });
+});
+
+//補助関数
+function getArticleData(a:Record<string,any>):article_data{
+  return {
+    link:".."+a.url+"/",title:a.frontmatter.title,description:a.frontmatter.description,image:a.frontmatter.image!=null?".."+a.frontmatter.image:""
+  }
+}
+
+//タグの情報をファイルに保存
+//devの時はエラーが出ててもいける
+//コメントアウトしたらビルドが通る
+import * as fs from "fs";
+fs.writeFileSync("./src/scripts/tags.json",JSON.stringify({tags:json}));
+---
+
+<Home og_url={BASE_URL+'works/'} og_image="/img/Works.avif" og_locale="ja_JP" og_site_name="六甲学院物理部2024" og_title="Works | 作品" og_description="文化祭で展示する作品などの記事を掲載している場所です。" og_type="website">
+  <div id="container">
+    <div id="grid">
+      {
+        articles.map(a=>{
+          return <div class="grid-content">
+            <a href={a.url+"/"}>
+              {a.frontmatter.image?<img src={a.frontmatter.image} alt={a.frontmatter.title} />:null}
+              <div class="masonry-text">
+                <h4>{a.frontmatter.title}</h4>
+                <p>{a.frontmatter.description}</p>
+              </div>
+            </a>
+          </div>
+        })
+      }
+    </div>
+  </div>
+</Home>
+
+<style>
+#container{
+  background-color: #eee;
+  padding-inline: 1rem;
+  padding-block: 2rem;
+  width: 100%;
+  min-height: calc(100vh - 4rem);
+}
+
+#grid{
+  width: 100%;
+}
+
+.grid-content{
+  width: 22%;
+  background-color: #fcfcfc;
+  box-shadow: 0 0 5px #0002;
+  border-radius: 5px;
+  transition: all 0.5s  cubic-bezier(0.16, 1, 0.3, 1);
+  @media (max-width: 1421px) {
+    width: 30%;
+  }
+  @media (max-width: 1153px) {
+    width: 47%;
+  }
+  @media (max-width: 966px) {
+    width: 97%;
+  }
+  a{
+    text-decoration: none;
+    &:hover{
+      text-decoration: underline dotted #2065a1;
+      img{
+        filter: opacity(50%);
+      }
+    }
+  }
+  img{
+    max-width: 100%;
+    box-sizing: border-box;
+    transition: filter 0.25s ease-out;
+  }
+  .masonry-text{
+    padding: 1rem;
+  }
+  h4{
+    color: #333;
+    font-size: 1.4rem;
+    font-weight: 400;
+    margin-block: 0.5rem;
+  }
+  p{
+    font-size: 0.85rem;
+    color: #777;
+    margin-block: 0.1rem;
+  }
+}
+</style>
+
+<script>
+const parent=document.getElementById("grid")!;
+const targets=Array.from(parent!.children)as HTMLElement[];
+
+let heights:number[]=[];
+let min_width=260;
+let gap=40;
+let lines=4;
+let id:number;
+
+layout();
+setTimeout(()=>layout(),250);
+window.addEventListener('load',()=>{
+  layout();
+  
+});
+window.addEventListener('resize',()=>{
+  clearTimeout(id);
+  layout();
+  id=window.setTimeout(layout,250);
+});
+
+function layout(){
+  const parent_width=parent.clientWidth;
+  lines=Math.floor(parent_width/(min_width+gap));
+  heights=[...Array(lines)].map((a,i)=>0);
+  const base_width=(parent_width-gap*lines)/lines;
+  targets.forEach((e,i,a)=>{
+    const data=getShortest();
+    e.style.position="absolute";
+    e.style.left=`${parent.offsetLeft+gap*0.5+(base_width+gap)*data.index}px`;
+    e.style.top=`${parent.offsetTop+gap*0.5+heights[data.index]}px`;
+    e.style.width=`${base_width}px`;
+    heights[data.index]+=e.getBoundingClientRect().height+gap;
+  });
+  parent.style.height=`${getHeight()}px`;
+}
+
+function getShortest(){
+  let r=1e10;
+  let idx=0;
+  heights.forEach((h,i,a)=>{
+    if(r>h){
+      r=h;
+      idx=i;
+    }
+  });
+  return {height:r,index:idx};
+}
+
+function getHeight(){
+  let max=0;
+  heights.forEach(h=>{
+    if(max<h)max=h;
+  });
+  return max;
+}
+</script>

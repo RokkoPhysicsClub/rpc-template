@@ -1,0 +1,46 @@
+---
+interface Props{
+  text:string;
+  onclick?:(text:string)=>string;
+}
+
+const {text,onclick}=Astro.props;
+---
+
+<button class="tag-element" onclick={onclick?onclick(text):""}>
+  <span class="tag-icon">#</span>
+  <p class="tag-text">{text}</p>
+</button>
+<style>
+.tag-element{
+  height: 1.5rem;
+  border: none;
+  border-radius: 1rem;
+  padding: 0;
+  padding-inline-end: 0.5rem;
+  background-color: #eee;
+  box-shadow: 0 0 5px #0004;
+  cursor: pointer;
+  p{
+    font-size: 1rem;
+  }
+  span{
+    font-size: 1.25rem;
+  }
+}
+
+.tag-icon{
+  display: inline-block;
+  content: "";
+  background-color: rgb(160, 198, 255);
+  text-align: center;
+  width: 1.5rem;
+  border-radius: 1rem;
+}
+
+.tag-text{
+  display: inline;
+  margin: 0;
+  user-select: none;
+}
+</style>
