@@ -35,10 +35,15 @@ function getArticleData(a:Record<string,any>):article_data{
 }
 
 //タグの情報をファイルに保存
-//devの時はエラーが出ててもいける
-//コメントアウトしたらビルドが通る
-import * as fs from "fs";
-fs.writeFileSync("./src/scripts/tags.json",JSON.stringify({tags:json}));
+try{
+  //静的解析でエラーになるのを避けるため、変数(定数)を使用
+  const imp_str="fs";
+  //Dynamic importでお茶を濁す
+  const fs=await import(/* @vite-ignore */imp_str);
+  fs.writeFileSync("./src/scripts/tags.json",JSON.stringify({tags:json}));
+}catch(_){
+  //ビルド時はfsをimport出来ないため、try-catchで対応
+}
 ---
 
 <Home og_url={BASE_URL+'works/'} og_image="/img/Works.avif" og_locale="ja_JP" og_site_name="六甲学院物理部2024" og_title="Works | 作品" og_description="文化祭で展示する作品などの記事を掲載している場所です。" og_type="website">
