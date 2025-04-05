@@ -1,0 +1,264 @@
+---
+import { Code } from 'astro:components';
+
+interface Props{
+  permalink:string;
+  show_raw?:boolean;
+}
+
+//拡張子と言語のマッピング
+const lang_map={
+  "js":"javascript",
+  "ts":"typescript",
+  "py":"python",
+  "java":"java",
+  "c":"c",
+  "cpp":"cpp",
+  "go":"go",
+  "rb":"ruby",
+  "php":"php",
+  "html":"html",
+  "css":"css",
+  "pde":"java",
+  "md":"markdown",
+  "json":"json",
+  "xml":"xml",
+  "yaml":"yaml",
+  "yml":"yaml",
+  "txt":"text",
+  "csv":"csv",
+  "toml":"toml",
+  "ini":"ini",
+  "bat":"bat",
+  "sh":"bash",
+  "zsh":"bash",
+  "ps1":"powershell",
+  "psm1":"powershell",
+  "psd1":"powershell",
+  "ps1xml":"powershell",
+  "rs":"rust",
+  "swift":"swift",
+  "dart":"dart",
+  "kotlin":"kotlin",
+  "r":"r",
+  "sql":"sql",
+  "pl":"perl",
+  "lua":"lua",
+  "clj":"clojure",
+  "cljs":"clojurescript",
+  "el":"elixir",
+  "ex":"elixir",
+  "exs":"elixir",
+  "erl":"erlang",
+  "hrl":"erlang",
+  "coffee":"coffeescript",
+};
+//拡張子とMIMEタイプのマッピング
+const img_map={
+  "png":"image/png",
+  "jpg":"image/jpeg",
+  "jpeg":"image/jpeg",
+  "gif":"image/gif",
+  "webp":"image/webp",
+  "avif":"image/avif",
+  "svg":"image/svg+xml",
+}
+//GitHubのURLを解析するための正規表現
+const re = /https:\/\/github\.com\/([^/]*?)\/([^/]*?)\/blob\/([^/]*?)\/([^#]*)(#[^:]+)?/;
+
+//permalinkはGitHubのURLを指定する
+const { permalink,show_raw } = Astro.props;
+//GitHubのURLを解析して、owner, repo, branch, path, lineを取得
+const match = permalink.match(re);
+const owner = match?.[1];
+const repo = match?.[2];
+const branch = match?.[3];
+const path = match?.[4];
+const line = match![5]?match![5].match(/#L(\d+)(-L(\d+))?/):null;
+
+//GitHubのAPIを使用して、指定されたファイルを取得
+const api_url=`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`
+const response=await fetch(api_url);
+
+//取得したファイルの情報を格納する変数を定義
+let code_lines={start:0,end:0};
+let code="";
+let lang="";
+let type:"error"|"code"|"image"|"link"="link";
+let image_data="";
+
+if(!response.ok) {
+  //エラーが発生した場合、エラーメッセージを表示
+  code=`Failed to fetch file: ${response.statusText}`;
+  type="error";
+}else{
+  //正常に取得できた場合、ファイルの情報を解析
+  type="code";
+  lang = lang_map[path!.split(".").pop()!as keyof typeof lang_map];
+  if(lang==null){
+    //拡張子が不明な場合、画像かどうかを判定
+    if(show_raw==true){
+      //rawを表示する場合、拡張子をテキストとして扱う
+      lang="text";
+      await parseCode();
+    }else if(img_map[path!.split(".").pop()!as keyof typeof img_map]){
+      //拡張子が画像の場合、画像データを取得
+      lang=img_map[path!.split(".").pop()!as keyof typeof img_map];
+      type="image";
+      const data=new Uint8Array(await response.arrayBuffer());
+      let binaryData = "";
+      for (var i = 0, len = data.byteLength; i < len; i++) {
+          binaryData += String.fromCharCode(data[i]);
+      }
+      image_data=`data:${lang};base64,` + btoa(binaryData);
+    }else{
+      //拡張子が不明な場合、リンクを表示
+      type="link";
+    }
+  }else{
+    //拡張子がわかる場合、コードを取得
+    await parseCode();
+  }
+}
+
+//コードを取得する関数
+async function parseCode(){
+  const text = await response.text();
+  const lines = text.split("\n");
+  const start_line = line ? parseInt(line[1])-1 : 0;
+  const end_line = line && line[3] ? parseInt(line[3]) : lines.length-1;
+  code_lines={start:start_line,end:end_line};
+  code = lines.slice(start_line, end_line).join("\n");
+}
+---
+
+<div class="github-embed">
+  <header class="github-embed-header">
+    <img class="github-embed-icon" src="/img/gh.svg" alt=""/>
+    <div class="github-embed-header-content">
+      <a class="github-embed-link" href={permalink}>{`${owner}/${path}`}</a>
+      <p class="github-embed-location">{type==="code"?`Lines ${code_lines.start+1} to ${code_lines.end+1} in`:"No line"}
+        <a class="github-commit-link" href={`https://github.com/${owner}/${repo}/commit/${branch}`}>{`${branch?.slice(0,7)+(branch!.length>7?"...":"")}`}</a>
+      </p>
+    </div>
+  </header>
+  <div class="github-embed-code">
+    {
+      type==="link"?<a href={permalink}>View on GitHub →</a>:
+      type==="error"?<p class="error">{code}</p>:
+      type==="image"?<img src={image_data} alt=""/>:
+      type==="code"?
+        <span class="line-numbers">
+        {
+          [...Array(code_lines.end-code_lines.start).keys()].map((_,i)=><span>{code_lines.start+i+1}</span>)
+        }
+        </span>
+        <Code code={code} lang={lang as any} theme={"github-light-default"}/>:
+      <p></p>
+    }
+    
+  </div>
+</div>
+
+<style>
+.github-embed{
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  margin: 16px 0;
+  border-radius: 10px;
+  border: 1px solid #e1e4e8;
+}
+.github-embed-header{
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e1e4e8;
+}
+.github-embed-icon{
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+}
+.github-embed-header-content{
+  display: flex;
+  flex-direction: column;
+}
+.github-embed-link{
+  font-size: 14px;
+  font-weight: bold;
+  color: #0366d6;
+  text-decoration: none;
+}
+.github-embed-link:hover{
+  text-decoration: underline;
+}
+.github-embed-location{
+  font-size: 12px;
+  color: #586069;
+  margin-block: 4px;
+}
+.github-commit-link{
+  font-size: 12px;
+  color: #586069;
+  text-decoration: none;
+  &:hover{
+    text-decoration: underline;
+  }
+}
+.github-embed-code{
+  display: flex;
+  flex-direction: row;
+  background-color: #fff;
+  border-radius: 0 0 10px 10px;
+  overflow: auto;
+  max-height: 30vh;
+  box-sizing: border-box;
+  pre{
+    border-radius: 10px;
+    margin: 0;
+    background-color: #fff!important;
+    overflow:auto;
+    height: fit-content;
+    >code{
+      background-color: #fff!important;
+      padding-left: 16px;
+    }
+  }
+  &:has(img,a){
+    align-items: center;
+    justify-content: center;
+  }
+  img{
+    max-width: 100%;
+    max-height: 30vh;
+    object-fit: cover;
+  }
+  a{
+    padding: 16px;
+    color: #0366d6;
+    text-decoration: none;
+    &:hover{
+      text-decoration: underline;
+    }
+  }
+  .error{
+    padding: 16px;
+    color: #d73a4a;
+    font-size: 14px;
+    margin: 0;
+  }
+}
+.line-numbers{
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  padding-right: 0;
+  color: #788089;
+  font-size: 0.9rem;
+  line-height: 1.2rem;
+  user-select: none;
+  pointer-events: none;
+  height: fit-content;
+  text-align: right;
+}
+</style>
