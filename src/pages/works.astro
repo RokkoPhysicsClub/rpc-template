@@ -4,46 +4,6 @@ import Home from "../layouts/Home.astro";
 
 const articles=await Astro.glob("./works/*");
 
-//型定義
-type article_data={link:string,title:string,description:string,image:string}
-type tag_map={name:string,articles:article_data[]};
-const json:Array<tag_map>=[];
-
-//記事からタグ関連の情報を生成
-articles.forEach(a=>{
-  if(!a.frontmatter)return;
-  if(!a.frontmatter.tags)return;
-  (a.frontmatter.tags as string[]).forEach(t=>{
-    let exist=false;
-    json.forEach(j=>{
-      if(j.name==t){
-        j.articles.push(getArticleData(a));
-        exist=true;
-      }
-    });
-    if(!exist){
-      json.push({name:t,articles:[getArticleData(a)]});
-    }
-  });
-});
-
-//補助関数
-function getArticleData(a:Record<string,any>):article_data{
-  return {
-    link:".."+a.url+"/",title:a.frontmatter.title,description:a.frontmatter.description,image:a.frontmatter.image!=null?".."+a.frontmatter.image:""
-  }
-}
-
-//タグの情報をファイルに保存
-try{
-  //静的解析でエラーになるのを避けるため、変数(定数)を使用
-  const imp_str="fs";
-  //Dynamic importでお茶を濁す
-  const fs=await import(/* @vite-ignore */imp_str);
-  fs.writeFileSync("./src/scripts/tags.json",JSON.stringify({tags:json}));
-}catch(_){
-  //ビルド時はfsをimport出来ないため、try-catchで対応
-}
 ---
 
 <Home og_url={BASE_URL+'works/'} og_image="/img/Works.avif" og_locale="ja_JP" og_site_name="六甲学院物理部2024" og_title="Works | 作品" og_description="文化祭で展示する作品などの記事を掲載している場所です。" og_type="website">

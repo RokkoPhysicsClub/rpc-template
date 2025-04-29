@@ -1,0 +1,23 @@
+---
+layout: "../../layouts/Page.astro"
+image: null
+title: "Transpiler"
+description: "ProcessingのコードをJavaScriptに変換するTranspiler"
+author: "async0x4C"
+tags: ["TypeScript","Processing","JavaScript","Web"]
+---
+
+ProcessingのコードをJavaScriptに変換する
+
+## 概要
+Processingで書いたスケッチ(プログラム)をJavaScriptに変換するツールは以前はprocessing.jsのみだったものの、2018年に開発が終了しており、かつジェネリクスや関数のオーバーロードといった構文の変換に対応していないため、ProcessingのコードをJavaScriptに変換するTranspilerを開発した。
+
+## 実装
+今回は、ProcessingのコードをAntlrによって解析し、得られた構文木を基にVisitorを利用して変換するというロジックを実装した。
+
+変換のロジックには3つの段階があり、
+1. クラスごとの変数やメソッドの解析
+2. 変数やメソッド呼び出しの参照の解決
+3. プログラムの組み立て
+
+に分けられる。
