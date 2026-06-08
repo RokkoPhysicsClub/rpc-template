@@ -1,16 +1,16 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import mdx from '@astrojs/mdx';
-import { BASE_URL } from './src/consts';
 
 import relativeLinks from 'astro-relative-links';
 
-import fs from 'node:fs';
-import path from 'node:path';
+import mdx from '@astrojs/mdx';
+
 import matter from 'gray-matter';
+import { BASE_URL } from './src/consts';
+import { Glob } from 'bun';
 
 async function generateTags(){
-  const files=import.meta.glob('./src/pages/works/*.mdx');
+  const glob=new Glob('./src/pages/works/*.mdx');
   const data_list = [];
   const tags = new Set();
 
@@ -19,10 +19,10 @@ async function generateTags(){
    */
   const result = [];
 
-  for (const file in files) {
-    const content = fs.readFileSync(file, 'utf-8');
+  for await (const file of glob.scan(".")) {
+    const content = await Bun.file(file).text();
     const { data } = matter(content);
-    data.link = file.replace('./src/pages', '..');
+    data.link = file.replaceAll('\\', '/').replace('./src/pages', '..');
     data_list.push(data);
   }
 
@@ -40,17 +40,16 @@ async function generateTags(){
     }
   });
   
-  const outPath = path.join('src', 'scripts', 'tags.json');
-  fs.writeFileSync(outPath, JSON.stringify({tags:result}, null, 2), 'utf-8');
-  console.log(`[tag generator] ${result.length} tags written to ${outPath}`);
+  await Bun.write('./src/scripts/tags.json', JSON.stringify({tags:result}, null, 2));
+  console.log(`[tag generator] ${result.length} tags written to ./src/scripts/tags.json`);
 }
 
 // https://astro.build/config
 export default defineConfig({
   site: BASE_URL,
   integrations: [
-    mdx(),
     relativeLinks(),
+    mdx(),
     {
       name: "generate-tags",
       hooks: {

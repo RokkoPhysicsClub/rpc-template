@@ -30,12 +30,6 @@
           "title": "作品のタイトル",
           "description": "作品の簡単な説明",
           "image": "..作品のメイン画像"
-        },
-        {
-          "link": "../works/Sample.mdx",
-          "title": "Transpiler",
-          "description": "ProcessingのコードをJavaScriptに変換するTranspiler",
-          "image": ""
         }
       ]
     },
@@ -49,9 +43,9 @@
           "image": "..作品のメイン画像"
         },
         {
-          "link": "../works/Sample.mdx",
-          "title": "Transpiler",
-          "description": "ProcessingのコードをJavaScriptに変換するTranspiler",
+          "link": "../works/Features.mdx",
+          "title": "Features",
+          "description": "Markdown記法の一覧",
           "image": ""
         }
       ]
@@ -79,23 +73,12 @@
       ]
     },
     {
-      "name": "TypeScript",
+      "name": "Markdown",
       "articles": [
         {
-          "link": "../works/Sample.mdx",
-          "title": "Transpiler",
-          "description": "ProcessingのコードをJavaScriptに変換するTranspiler",
-          "image": ""
-        }
-      ]
-    },
-    {
-      "name": "JavaScript",
-      "articles": [
-        {
-          "link": "../works/Sample.mdx",
-          "title": "Transpiler",
-          "description": "ProcessingのコードをJavaScriptに変換するTranspiler",
+          "link": "../works/Features.mdx",
+          "title": "Features",
+          "description": "Markdown記法の一覧",
           "image": ""
         }
       ]

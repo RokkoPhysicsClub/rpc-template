@@ -1,0 +1,119 @@
+---
+//テーマ選択
+
+import sun from "../../public/img/sun.svg";
+import moon from "../../public/img/moon.svg";
+import gear from "../../public/img/gear.svg";
+
+const themes = [
+  {
+    name: "light",
+    icon: sun
+  },
+  {
+    name: "dark",
+    icon: moon
+  },
+  {
+    name: "os",
+    icon: gear
+  }
+];
+---
+
+<div id="selector-container">
+  <div id="theme-highlight" data-index={2}></div>
+  <div id="button-container">
+    {
+      themes.map(t => {
+        return <button class="theme-button" data-type={t.name}>
+          <t.icon></t.icon>
+        </button>
+      })
+    }
+  </div>
+</div>
+
+<style>
+#selector-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-block: 1.5rem;
+  padding: 0.25rem;
+  width: fit-content;
+  border-radius: 1.5rem;
+  background-color: var(--surface);
+  align-self: center;
+}
+
+#theme-highlight {
+  position: absolute;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 2.5rem;
+  background-color: color-mix(var(--primary-container) 70%, transparent 30%);
+  left: var(--theme-highlight-left);
+  transition: left 0.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#button-container {
+  display: grid;
+  grid-template-columns: repeat(3, 2.5rem);
+  height: 2.5rem;
+  gap: 0.25rem;
+  z-index: 1;
+  button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    background-color: transparent;
+    grid-column: calc(sibling-index()) / calc(sibling-index() + 1);
+    cursor: pointer;
+    svg {
+      width: 2.25rem;
+      height: 2.25rem;
+      fill: var(--on-surface);
+      pointer-events: none;
+      &:focus {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        cursor:pointer;
+      }
+    }
+  }
+}
+</style>
+
+<script>
+const buttons = Array.from(document.getElementsByClassName('theme-button')) as HTMLButtonElement[];
+const highlight = document.getElementById('theme-highlight') as HTMLDivElement;
+
+buttons.forEach(b => {
+  b.addEventListener('click', e => {
+    const name = (e.target! as HTMLButtonElement).dataset.type;
+
+    switch(name) {
+      case "light":
+        highlight.style.left = `${0.25}rem`;
+        document.documentElement.style.setProperty('color-scheme', 'light');
+        document.documentElement.style.setProperty('--theme-highlight-left', `${0.25}rem`);
+        localStorage.setItem('theme', 'light');
+        break;
+      case "dark":
+        highlight.style.left = `${0.25 + 2.75}rem`;
+        document.documentElement.style.setProperty('color-scheme', 'dark');
+        document.documentElement.style.setProperty('--theme-highlight-left', `${0.25 + 2.75}rem`);
+        localStorage.setItem('theme', 'dark');
+        break;
+      case "os":
+        highlight.style.left = `${0.25 + 2.75 * 2}rem`;
+        document.documentElement.style.setProperty('color-scheme', '');
+        document.documentElement.style.setProperty('--theme-highlight-left', `${0.25 + 2.75 * 2}rem`);
+        localStorage.setItem('theme', '');
+        break;
+    }
+  });
+});
+</script>

@@ -1,25 +1,24 @@
 {
-  "name": "rpc-2024",
+  "name": "rpc-web",
   "type": "module",
   "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
-    "dev": "astro dev",
-    "devh": "astro dev --host",
-    "start": "astro dev",
-    "build": "astro check && astro build",
-    "preview": "astro preview",
+    "dev": "bunx --bun astro dev",
+    "devh": "bunx --bun astro dev --host",
+    "build": "bunx --bun astro build",
+    "preview": "bunx --bun astro preview",
     "astro": "astro"
   },
   "dependencies": {
-    "": "file:",
-    "@astrojs/check": "^0.9.4",
-    "@astrojs/mdx": "^4.2.5",
-    "astro": "^5.7.8",
-    "astro-relative-links": "^0.4.0",
-    "gray-matter": "^4.0.3",
-    "typescript": "^5.5.4"
+    "@astrojs/mdx": "^6.0.2",
+    "astro": "^6.4.4",
+    "astro-relative-links": "^0.4.2",
+    "gray-matter": "^4.0.3"
   },
   "devDependencies": {
-    "@types/node": "^22.15.3"
+    "@types/bun": "^1.3.14"
   }
 }

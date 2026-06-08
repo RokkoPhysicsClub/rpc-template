@@ -1,19 +1,29 @@
 ---
-import { BASE_URL } from "../consts";
+import { BASE_URL, SITE_TITLE } from "../consts";
 import Home from "../layouts/Home.astro";
 
-const articles=await Astro.glob("./works/*");
+const articles=Object.values(import.meta.glob<any>("./works/*.mdx", {eager:true}));
 
+const images = import.meta.glob<{ default: ImageMetadata }>('/public/img/**/*.{png,jpeg,jpg,gif,svg,webp,avif}', {eager: true});
+const image_map: Map<string, { default: ImageMetadata }> = new Map();
+
+articles.forEach(a => {
+  if(a.frontmatter.image != null && images['/public' + a.frontmatter.image] != null) {
+    image_map.set(a.frontmatter.image, images['/public' + a.frontmatter.image]);
+  }
+});
 ---
 
-<Home og_url={BASE_URL+'works/'} og_image="/img/Works.avif" og_locale="ja_JP" og_site_name="六甲学院物理部2024" og_title="Works | 作品" og_description="文化祭で展示する作品などの記事を掲載している場所です。" og_type="website">
+<Home og_url={BASE_URL+'works/'} og_image="/img/Works.avif" og_locale="ja_JP" og_site_name={SITE_TITLE} og_title="Works | 作品" og_description="文化祭で展示する作品などの記事を掲載している場所です。" og_type="website">
   <div id="container">
     <div id="grid">
       {
         articles.map(a=>{
-          return <div class="grid-content">
+          const metadata = image_map.get(a.frontmatter.image);
+          const ratio = metadata != null ? metadata.default.height / metadata.default.width : null;
+          return <div class="grid-content" data-aspect-ratio={ratio}>
             <a href={a.url+"/"}>
-              {a.frontmatter.image?<img src={a.frontmatter.image} alt={a.frontmatter.title} />:null}
+              {image_map.has(a.frontmatter.image)?<img src={a.frontmatter.image} alt={a.frontmatter.title} />:null}
               <div class="masonry-text">
                 <h4>{a.frontmatter.title}</h4>
                 <p>{a.frontmatter.description}</p>
@@ -28,36 +38,37 @@ const articles=await Astro.glob("./works/*");
 
 <style>
 #container{
-  background-color: #eee;
+  container-type: inline-size;
+  background-color: var(--surface);
   padding-inline: 1rem;
   padding-block: 2rem;
   width: 100%;
-  min-height: calc(100vh - 4rem);
+  min-height: calc(100dvh - 4rem);
+  @media (max-width: 785px) {
+    padding-block-start: calc(2rem + 40px);
+    min-height: calc(100dvh - 4rem - 40px);
+  }
 }
 
 #grid{
-  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-auto-rows: 10px;
+  column-gap: 40px;
+  width: 100cqw;
 }
 
 .grid-content{
-  width: 22%;
-  background-color: #fcfcfc;
-  box-shadow: 0 0 5px #0002;
-  border-radius: 5px;
+  opacity: 0;
+  background-color: var(--surface-highest);
+  box-shadow: 0 0 5px var(--shadow);
+  border-radius: 1rem;
   transition: all 0.5s  cubic-bezier(0.16, 1, 0.3, 1);
-  @media (max-width: 1421px) {
-    width: 30%;
-  }
-  @media (max-width: 1153px) {
-    width: 47%;
-  }
-  @media (max-width: 966px) {
-    width: 97%;
-  }
+  overflow: hidden;
   a{
     text-decoration: none;
     &:hover{
-      text-decoration: underline dotted #2065a1;
+      text-decoration: underline dotted var(--primary);
       img{
         filter: opacity(50%);
       }
@@ -72,14 +83,14 @@ const articles=await Astro.glob("./works/*");
     padding: 1rem;
   }
   h4{
-    color: #333;
+    color: var(--on-surface);
     font-size: 1.4rem;
     font-weight: 400;
     margin-block: 0.5rem;
   }
   p{
     font-size: 0.85rem;
-    color: #777;
+    color: var(--outline-variant);
     margin-block: 0.1rem;
   }
 }
@@ -89,38 +100,39 @@ const articles=await Astro.glob("./works/*");
 const parent=document.getElementById("grid")!;
 const targets=Array.from(parent!.children)as HTMLElement[];
 
-let heights:number[]=[];
-let min_width=260;
-let gap=40;
-let lines=4;
-let id:number;
+const gap = 4;
+let lines: number;
+const line_height = Number(getComputedStyle(parent).getPropertyValue('grid-auto-rows').replace('px', ''));
+let heights: number[];
 
 layout();
-setTimeout(()=>layout(),250);
-window.addEventListener('load',()=>{
+
+const observer = new ResizeObserver(() => {
   layout();
-  
-});
-window.addEventListener('resize',()=>{
-  clearTimeout(id);
-  layout();
-  id=window.setTimeout(layout,250);
 });
 
+observer.observe(parent);
+
 function layout(){
-  const parent_width=parent.clientWidth;
-  lines=Math.floor(parent_width/(min_width+gap));
-  heights=[...Array(lines)].map((a,i)=>0);
-  const base_width=(parent_width-gap*lines)/lines;
-  targets.forEach((e,i,a)=>{
-    const data=getShortest();
-    e.style.position="absolute";
-    e.style.left=`${parent.offsetLeft+gap*0.5+(base_width+gap)*data.index}px`;
-    e.style.top=`${parent.offsetTop+gap*0.5+heights[data.index]}px`;
-    e.style.width=`${base_width}px`;
-    heights[data.index]+=e.getBoundingClientRect().height+gap;
+  targets.forEach(e => {
+    e.style.gridRow = '';
+    e.style.gridColumn = '';
   });
-  parent.style.height=`${getHeight()}px`;
+
+  lines = getComputedStyle(parent).getPropertyValue('grid-template-columns').split(" ").length;
+  heights = new Array(lines).fill(1);
+
+  targets.forEach((e,i,a)=>{
+    const rect = e.getElementsByClassName('masonry-text')[0].getBoundingClientRect();
+    const width = rect.width;
+    const height = Math.ceil((rect.height + (e.dataset.aspectRatio != null ? width * Number(e.dataset.aspectRatio!) : 0)) / line_height);
+    const data = getShortest();
+    e.style.opacity = '1';
+    e.style.gridRowStart = `${data.height}`;
+    e.style.gridRowEnd = `${data.height + height}`;
+    e.style.gridColumn = `${data.index + 1} / ${data.index + 2}`;
+    heights[data.index] = data.height + height + gap;
+  });
 }
 
 function getShortest(){
@@ -133,13 +145,5 @@ function getShortest(){
     }
   });
   return {height:r,index:idx};
-}
-
-function getHeight(){
-  let max=0;
-  heights.forEach(h=>{
-    if(max<h)max=h;
-  });
-  return max;
 }
 </script>

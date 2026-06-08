@@ -19,7 +19,7 @@ const fm={title:"Tags"}
     tags.tags.map(t=>
       <div class="card-list" data-tagname={t.name}>
         <h2>タグ "{t.name}" が付いた記事</h2>
-        {t.articles.map(a=><Card url={a.link} og_title={a.title} og_description={a.description} og_image={a.image}></Card>)}
+        {t.articles.map(a=><Card url={a.link.replace('.mdx', '/')} og_title={a.title} og_description={a.description} og_image={a.image}></Card>)}
       </div>
     )
   }

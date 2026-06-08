@@ -60,47 +60,72 @@ const tags:string[]=Astro.props.frontmatter.tags||[];
       <slot/>
     </div>
   </div>
-  {//記事の場合、右側に見出し一覧を追加
-    is_article?<div id="heading-list">
-      <div id="heading-container">
-        <div class="heading-box">
-          <h2 id="author-box">{author}</h2>
+  {
+    (() => {
+      let list =
+        is_article?
+          <div class="list-container">
+            <ol class="ol-depth-1">
+              {//大きな見出しの情報を処理
+                heading_data().map((h: heading_hierarchy)=>{
+                  return <li>
+                    <a href={`#${h.parent.slug}`} id={`anchor-${h.parent.slug}`}>
+                      {h.parent.text}
+                    </a>
+                    {//小さな見出しを子として持つのであれば、処理する
+                      h.child.length>0?<ol class="ol-depth-2">{
+                        h.child.map((h:heading)=>{
+                          return <li>
+                            <a href={`#${h.slug}`} id={`anchor-${h.slug}`}>{h.text}</a>
+                          </li>
+                        })
+                      }</ol>:null
+                    }
+                  </li>
+                })
+              }
+            </ol>
+          </div>
+        :null;
+      
+      return is_article?
+        <div id="heading-list">
+          <div id="heading-container">
+            <div class="heading-box">
+              <h2 id="author-box">{author}</h2>
+            </div>
+            <div class="heading-box" id="box-sticky">
+              {
+                list
+              }
+            </div>
+          </div>
         </div>
-        <div class="heading-box" id="box-sticky">
-          <ol class="ol-depth-1">
-            {//大きな見出しの情報を処理
-              heading_data().map((h: heading_hierarchy)=>{
-                return <li>
-                  <a href={`#${h.parent.slug}`} id={`anchor-${h.parent.slug}`}>
-                    {h.parent.text}
-                  </a>
-                  {//小さな見出しを子として持つのであれば、処理する
-                    h.child.length>0?<ol class="ol-depth-2">{
-                      h.child.map((h:heading)=>{
-                        return <li>
-                          <a href={`#${h.slug}`} id={`anchor-${h.slug}`}>{h.text}</a>
-                        </li>
-                      })
-                    }</ol>:null
-                  }
-                </li>
-              })
-            }
-          </ol>
+        <button id="heading-menu">
+          目次
+          <span class="menu-arrow"></span>
+        </button>
+        <div class="heading-box" id="menu-heading-box">
+          {
+            list
+          }
         </div>
-      </div>
-    </div>:null
+        :null
+    })()
   }
-  
 </Home>
 
 <style>
 #container{
-  background-color: #f8f8f8;
+  background-color: var(--surface);
   padding-inline: 1rem;
   padding-block: 2rem;
-  min-height: calc(100vh - 4rem);
+  min-height: calc(100dvh - 4rem);
   width: 65%;
+  @media (max-width:785px) {
+    padding-block-start: calc(2rem + 20px);
+    min-height: calc(100dvh - 4rem - 20px);
+  }
   @media (max-width:1280px) {
     width: calc(100% - 2rem);
   }
@@ -124,7 +149,7 @@ const tags:string[]=Astro.props.frontmatter.tags||[];
 
 .heading-box{
   padding: 1rem;
-  background-color: #f8f8f8;
+  background-color: var(--surface);
   border-radius: 10px;
   height: fit-content;
 }
@@ -145,20 +170,47 @@ const tags:string[]=Astro.props.frontmatter.tags||[];
   font-weight: 400;
 }
 
+.list-container{
+  position: relative;
+  height: fit-content;
+}
+
 .ol-depth-1{
   padding-inline-start: 1rem;
   font-size: 0.9rem;
   >li{
-    list-style: circle;
+    list-style: none;
     >a{
       display: -webkit-box;
       text-decoration: none;
-      color: #777;
+      color: var(--outline-variant);
       margin: 8px 0;
+      transition: color 0.1s ease-out;
       &:hover{
-        color: #333;
+        color: var(--on-surface);
       }
     }
+    &::before {
+      content: "";
+      position: absolute;
+      display: inline-block;
+      width: 0.5rem;
+      height: 0.5rem;
+      background-color: var(--surface);
+      border: 1px solid var(--outline-variant);
+      border-radius: 0.5rem;
+      left: -0.25rem;
+      margin-block-start: 0.45rem;
+    }
+  }
+  &::before {
+    content: "";
+    background-color: color-mix(in srgb, var(--outline-variant) 70%, var(--surface) 30%);
+    width: 2px;
+    position: absolute;
+    top: 0.45rem;
+    bottom: 0.45rem;
+    left: 0;
   }
 }
 
@@ -169,11 +221,25 @@ const tags:string[]=Astro.props.frontmatter.tags||[];
     a{
       display: -webkit-box;
       text-decoration: none;
-      color: #aaa;
+      color: color-mix(in srgb, var(--outline-variant) 80%, var(--surface) 20%);
       margin: 8px 0;
+      margin-inline-start: 0.5em;
+      transition: color 0.1s ease-out;
       &:hover{
-        color: #333;
+        color: var(--on-surface);
       }
+    }
+    &::before {
+      content: "";
+      position: absolute;
+      display: inline-block;
+      width: 0.25rem;
+      height: 0.25rem;
+      background-color: var(--outline-variant);
+      border: 1px solid var(--surface);
+      border-radius: 0.5rem;
+      left: -0.125rem;
+      margin-block-start: 0.45rem;
     }
   }
 }
@@ -183,6 +249,54 @@ const tags:string[]=Astro.props.frontmatter.tags||[];
   flex-wrap: wrap;
   gap: 1rem;
   margin-block: 1.5rem;
+}
+
+#heading-menu{
+  position: fixed;
+  right: 5px;
+  top: 5px;
+  height: 40px;
+  border: none;
+  background-color: var(--surface-low);
+  display: flex;
+  z-index: 1;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  border-radius: 10px;
+  padding-inline: 10px;
+  box-shadow: var(--shadow) 0 0 5px;
+  >.menu-arrow{
+    display: inline-block;
+    width: 0.3rem;
+    height: 0.3rem;
+    border-right: 2px solid var(--outline-variant);
+    border-bottom: 2px solid var(--outline-variant);
+    transform: translate(0,-0.1rem) rotate(45deg);
+    transition: transform 0.25s ease-out;
+    &.open{
+      transform: translate(0,0.1rem) rotate(-135deg);
+    }
+  }
+
+  @media (min-width:1280px) {
+    display: none;
+  }
+}
+
+#menu-heading-box{
+  position: fixed;
+  right: 10px;
+  top: 55px;
+  box-shadow: var(--shadow) 0 0 5px;
+  opacity: 0;
+  transition: opacity 0.1s ease-out;
+  max-height: calc(100dvh - 100px);
+  overflow-y: auto;
+  pointer-events: none;
+  @media (min-width:1280px) {
+    display: none;
+  }
 }
 </style>
 
@@ -194,25 +308,39 @@ h1{
 #slot{
   h1,h2{
     padding-bottom: .3em;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid var(--outline);
   }
 }
 
+table {
+  display: block;
+  border-radius: 0.5em;
+  overflow-x: auto;
+  border-spacing: 0;
+  max-width: 100%;
+  width: fit-content;
+}
+
 thead{
-  background-color: #ccc;
+  background-color: var(--surface-lowest);
+  th {
+    &:not(:nth-child(1)) {
+      border-block: 0.2em solid transparent;
+      box-shadow: inset 2px 0 0 -1px var(--outline-variant);
+    }
+  }
 }
 
 tbody{
   tr{
-    &:nth-child(2n){
-      background-color: #ccc;
-    }
-    &:nth-child(2n+1){
-      background-color: #e2e2e2;
-    }
+    background-color: var(--surface-low);
     td{
       padding-inline: 1rem;
-      padding-block: 0.1rem;
+      height: 1em;
+      &:not(:nth-child(1)) {
+        border-block: 0.2em solid transparent;
+        box-shadow: inset 2px 0 0 -1px var(--outline-variant);
+      }
     }
   }
 }
@@ -220,6 +348,9 @@ tbody{
 img{
   max-width: 100%;
   max-height: 50vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 @font-face {
@@ -229,7 +360,7 @@ img{
 
 code{
   padding: 0.2rem;
-  background-color: #ddd;
+  background-color: var(--outline);
   border-radius: 5px;
   line-height: 1.2rem;
   font-size: 0.9rem;
@@ -251,57 +382,89 @@ pre{
 blockquote{
   margin-inline: 0;
   padding-inline: 2rem;
-  border-inline-start: 3px solid #ccc;
-  color: #777;
+  border-inline-start: 3px solid var(--outline);
+  color: var(--outline-variant);
+}
+
+hr{
+  color: var(--outline);
 }
 </style>
 
 <script>
-//見出し一覧がある要素を取得
-const box=document.getElementById("box-sticky")!;
-//見出し名から見出しの要素を取得
-const anchors=box?Array.from(box.getElementsByTagName("a")):[];
-const headers:{e:HTMLElement,n:string}[]=[];
-anchors.forEach(a=>{
-  headers.push({e:document.getElementById(a.id.substring(7))!,n:a.id.substring(7)});
-});
-const anchor_map=anchors.map(a=>{
-  return {n:a.id.substring(7),e:a};
-});
+//再利用したかったのでクラス化
+class Highlighter{
+  target:HTMLElement;
+  headers:{e:HTMLElement,n:string}[];
+  anchor_map:{n:string,e:HTMLAnchorElement}[];
 
-highlight();
+  constructor(id:string){
+    //見出し一覧がある要素を取得
+    this.target=document.getElementById(id)!;
+    //見出し名から見出しの要素を取得
+    const anchors=this.target?Array.from(this.target.getElementsByTagName("a")):[];
+    this.headers=[];
+    anchors.forEach(a=>{
+      this.headers.push({e:document.getElementById(a.id.substring(7))!,n:a.id.substring(7)});
+    });
+    this.anchor_map=anchors.map(a=>{
+      return {n:a.id.substring(7),e:a};
+    });
+  }
+
+  //現在の画面上部の座標から良い感じに見出しをハイライトする
+  highlight(){
+    let p=this.headers[0];
+    let end=false;
+    const scroll=scrollY+scrollY/(document.body.clientHeight-window.innerHeight)*window.innerHeight;
+    this.headers.forEach((h,i)=>{
+      if(end)return;
+      if(h.e.offsetTop>scroll){
+        this.anchor_map.forEach(a=>{
+          if(a.n==p.n){
+            a.e.style.color="var(--primary)";
+          }else{
+            a.e.style.color="";
+          }
+        });
+        end=true;
+      }else if(i==this.headers.length-1){
+        this.anchor_map.forEach(a=>{
+          if(a.n==h.n){
+            a.e.style.color="var(--primary)";
+          }else{
+            a.e.style.color="";
+          }
+        });
+      }else{
+        p=h;
+      }
+    });
+  }
+}
+
+const highlight_box=new Highlighter("box-sticky");
+highlight_box.highlight();
+const highlight_menu=new Highlighter("menu-heading-box");
+highlight_menu.highlight();
 
 window.addEventListener('scroll',()=>{
-  highlight();
+  highlight_box.highlight();
+  highlight_menu.highlight();
 });
 
-//現在の画面上部の座標から良い感じに見出しをハイライトする
-function highlight(){
-  let p=headers[0];
-  let end=false;
-  const scroll=scrollY+scrollY/(document.body.clientHeight-window.innerHeight)*window.innerHeight;
-  headers.forEach((h,i)=>{
-    if(end)return;
-    if(h.e.offsetTop>scroll){
-      anchor_map.forEach(a=>{
-        if(a.n==p.n){
-          a.e.style.color="#88f";
-        }else{
-          a.e.style.color="";
-        }
-      });
-      end=true;
-    }else if(i==headers.length-1){
-      anchor_map.forEach(a=>{
-        if(a.n==h.n){
-          a.e.style.color="#88f";
-        }else{
-          a.e.style.color="";
-        }
-      });
-    }else{
-      p=h;
-    }
-  })
-}
+const menu_button=document.getElementById("heading-menu");
+const menu_box=document.getElementById("menu-heading-box")!;
+
+menu_button?.addEventListener("pointerdown",e=>{
+  const arrow=menu_button.getElementsByClassName("menu-arrow")[0]!;
+  arrow.classList.toggle("open");
+  if(arrow.classList.contains("open")){
+    menu_box.style.opacity="1";
+    menu_box.style.pointerEvents="all";
+  }else{
+    menu_box.style.opacity="0";
+    menu_box.style.pointerEvents="none";
+  }
+});
 </script>

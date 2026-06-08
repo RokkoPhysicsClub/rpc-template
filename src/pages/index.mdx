@@ -2,8 +2,9 @@
 layout: "../layouts/Page.astro"
 ---
 import Card from "../components/Card.astro";
+import { YEAR } from "../consts";
 
-# 六甲学院物理部 20xx年度文化祭ホームページへようこそ
+# 六甲学院物理部 {YEAR}年度文化祭ホームページへようこそ
 
 {/*ここに適当な文章が入る*/}
 
@@ -14,12 +15,12 @@ import Card from "../components/Card.astro";
 ## 学年表記について
   期　  |  学年  
 :---:|---
--- | 高校3年生
--- | 高校2年生
--- | 高校1年生
--- | 中学3年生
--- | 中学2年生
--- | 中学1年生
+{YEAR - 1942} | 高校3年生
+{YEAR - 1941} | 高校2年生
+{YEAR - 1940} | 高校1年生
+{YEAR - 1939} | 中学3年生
+{YEAR - 1938} | 中学2年生
+{YEAR - 1937} | 中学1年生
 
 <br />
 

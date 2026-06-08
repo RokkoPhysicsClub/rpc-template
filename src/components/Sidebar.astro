@@ -1,5 +1,6 @@
 ---
 import { SOCIALS } from '../consts';
+import ThemeSelector from './ThemeSelector.astro';
 
 interface Navs{
   name:string;
@@ -13,7 +14,7 @@ interface Props{
   credit:string;
 }
 
-const { title,title_desc,links,credit }=Astro.props;console.log(Astro.url.pathname);
+const { title,title_desc,links,credit }=Astro.props;
 //正規表現でURLから"/works/"や"/links/"の部分だけを抜き出す
 const category=Astro.url.pathname.match(/\/[^\/]*\/?/)![0];
 ---
@@ -24,17 +25,18 @@ const category=Astro.url.pathname.match(/\/[^\/]*\/?/)![0];
   <ul class="menu">
     {
       links.map(n=>
-        <li><span class="list-icon" style={n.link===category?'border-color:#2065a1;':''}></span><a href={n.link} style={n.link===category?'color:#2065a1;':''}>{n.name}</a></li>
+        <li><span class="list-icon" style={n.link===category?'border-color:var(--primary);':''}></span><a href={n.link} style={n.link===category?'color:var(--primary);':''}>{n.name}</a></li>
       )
     }
   </ul>
   <div id="social">
     {
       SOCIALS.map(s=>
-        s.link==null?null:<a class="sns-icon" href={s.link}><img src={s.icon} alt="icon" /></a>
+        s.link==null?null:<a class="sns-icon" href={s.link}><s.icon /></a>
       )
     }
   </div>
+  <ThemeSelector />
   <p id="credit">{`©${credit}`}</p>
 </div>
 
@@ -57,7 +59,7 @@ const category=Astro.url.pathname.match(/\/[^\/]*\/?/)![0];
     font-weight: 300;
     a{
       text-decoration: none;
-      color: #555;
+      color: var(--on-surface-variant);
     }
     .list-icon{
       content: "";
@@ -65,7 +67,7 @@ const category=Astro.url.pathname.match(/\/[^\/]*\/?/)![0];
       height: 0.5rem;
       margin-right: 0.5rem;
       margin-bottom: 0.2rem;
-      border-color: #555;
+      border-color: var(--on-surface-variant);
       border-style: solid;
       border-width: 0;
       border-right-width: 2px;
@@ -80,7 +82,7 @@ const category=Astro.url.pathname.match(/\/[^\/]*\/?/)![0];
 #title{
   a{
     text-decoration: none;
-    color: #333;
+    color: var(--on-background);
     font-weight: 500;
   }
 }
@@ -102,17 +104,19 @@ const category=Astro.url.pathname.match(/\/[^\/]*\/?/)![0];
   border-radius: 1.25rem;
   border-style: solid;
   border-width: 1px;
-  border-color: #333;
+  border-color: var(--on-background);
+  transition: border-color 0.1s ease-out;
   &:hover{
-    border-color: #2065a1;
-    img{
-      filter: brightness(0) saturate(100%) invert(29%) sepia(83%) saturate(747%) hue-rotate(174deg) brightness(97%) contrast(89%);
+    border-color: var(--primary-container);
+    svg{
+      fill: var(--primary-container);
     }
   }
-  img{
+  svg{
     width: 1.25rem;
     height: 1.25rem;
-    filter: invert() brightness(0.3);
+    fill: var(--on-background);
+    transition: fill 0.1s ease-out;
   }
 }
 </style>
