@@ -1,43 +1,26 @@
-# Astro Starter Kit: Minimal
+# 六甲学院物理部 Web部誌テンプレート
 
-```sh
-bun create astro@latest -- --template minimal
-```
+## What's this?
+Web版の部誌を制作するためのテンプレートです。
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+# 使い方(概要)
 
-## 🚀 Project Structure
+## 家でやらないといけないこと
+1. 右上の`Use this template`から`Create a new repository`を選択
+2. リポジトリの名前は`rpc-[西暦]`を推奨
+    1. 個人のGitHubアカウントがある場合、新たに作成したリポジトリの設定の`Collaborators`->`Manage Access`から個人のアカウントを共同編集者として追加すると開発が楽。
+3. 作成したリポジトリを`git clone`
+4. Visual Studio Codeで開いて、コンソールから`bun install`
+5. 部誌をまとめる
+6. 部誌がまとまったら、`bun run build`を実行
+7. リポジトリにコミット&プッシュ
 
-Inside of your Astro project, you'll see the following folders and files:
+## 学校でやること
+1. 各々の部誌を`.mdx`にまとめる
+2. まあ、家でも出来るんですけどね。
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+# ドキュメント
+もっと詳しく書いてあるドキュメントは[こちら](https://github.com/RokkoPhysicsClub/rpc-template/wiki)
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `bun install`             | Installs dependencies                            |
-| `bun dev`             | Starts local dev server at `localhost:4321`      |
-| `bun build`           | Build your production site to `./dist/`          |
-| `bun preview`         | Preview your build locally, before deploying     |
-| `bun astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `bun astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+# え?バグがある?
+自分で修正するか、よく分からないならDiscordで助けを求めたらいつの間にか直ってます。
